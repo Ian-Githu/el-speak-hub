@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Built for you · AI Masterclass · 13 June</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500;1,700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pine:#16331f; --pine-2:#1d4029; --pine-deep:#0c2012;
+    --cream:#fbf7ec; --cream-2:#f3ead3; --paper:#ece4d2;
+    --gold:#cda352; --gold-deep:#a07b2e;
+    --sage:#9caf88; --ink:#26241c; --ink-soft:#5d5942;
+    --clay:#b5683f; --teal:#2f6b63; --plum:#80435a; --amber:#b8862b;
+    --accent:var(--gold);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Spectral',Georgia,serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .display{font-family:'Playfair Display',Georgia,serif;}
+  .kicker{font-size:12px; letter-spacing:4px; text-transform:uppercase; color:var(--gold-deep); font-weight:600;}
+
+  /* ---- grain overlay ---- */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---- top bar ---- */
+  .bar{
+    position:sticky; top:0; z-index:100; background:rgba(18,40,26,.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid rgba(205,163,82,.3);
+  }
+  .bar-inner{max-width:1080px; margin:0 auto; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;}
+  .bar-brand{color:var(--cream); font-size:12px; letter-spacing:3px; text-transform:uppercase; white-space:nowrap;}
+  .bar-brand b{color:var(--gold);}
+  .bar-nav{display:flex; gap:6px; flex-wrap:wrap;}
+  .bar-nav button{
+    font-family:'Spectral',serif; font-size:14px; color:var(--cream); background:transparent;
+    border:1px solid rgba(205,163,82,.35); border-radius:2px; padding:6px 14px; cursor:pointer;
+    transition:all .25s ease;
+  }
+  .bar-nav button:hover{border-color:var(--gold); background:rgba(205,163,82,.12);}
+  .bar-nav button.on{background:var(--gold); color:var(--pine-deep); border-color:var(--gold); font-weight:600;}
+
+  /* ---- hero ---- */
+  .hero{
+    background:radial-gradient(120% 120% at 80% -10%, #234d31 0%, var(--pine) 45%, var(--pine-deep) 100%);
+    color:var(--cream); position:relative; overflow:hidden;
+  }
+  .hero::after{
+    content:"⏳"; position:absolute; right:-40px; top:30px; font-size:340px; color:rgba(205,163,82,.07);
+    font-family:Georgia,serif; line-height:1; pointer-events:none;
+  }
+  .hero-inner{max-width:1080px; margin:0 auto; padding:88px 28px 78px; position:relative; z-index:2;}
+  .hero h1{
+    font-size:clamp(44px,7vw,86px); line-height:.98; font-weight:900; margin:18px 0 0;
+    letter-spacing:-1px;
+  }
+  .hero h1 em{font-style:italic; color:var(--gold);}
+  .hero p{font-size:clamp(17px,2vw,21px); line-height:1.5; color:#d9cfb2; max-width:540px; margin:26px 0 0;}
+  .hero-cue{margin:40px 0 0; font-size:14px; letter-spacing:2px; text-transform:uppercase; color:var(--sage);}
+  .hero-cue span{display:inline-block; animation:bob 1.8s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
+
+  /* ---- persona picker ---- */
+  .pick{max-width:1080px; margin:-46px auto 0; padding:0 28px; position:relative; z-index:5;}
+  .pick-hint{text-align:center; max-width:540px; margin:22px auto 0; font-size:15px; font-style:italic; line-height:1.5; color:var(--gold-deep);}
+  .pick-hint b{font-style:normal; color:var(--pine);}
+  .pick-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+  @media(max-width:760px){.pick-grid{grid-template-columns:repeat(2,1fr);}}
+  .card{
+    background:var(--cream); border:1px solid #e2d6b6; border-radius:4px; padding:22px 20px 20px;
+    cursor:pointer; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    box-shadow:0 10px 26px rgba(20,40,28,.10); position:relative; overflow:hidden;
+  }
+  .card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--ac);}
+  .card:hover{transform:translateY(-5px); box-shadow:0 18px 38px rgba(20,40,28,.18);}
+  .card.on{border-color:var(--ac); box-shadow:0 18px 40px rgba(20,40,28,.22);}
+  .card .nm{font-family:'Playfair Display',serif; font-size:23px; color:var(--pine); margin:0 0 4px;}
+  .card .rl{font-size:13.5px; line-height:1.4; color:var(--ink-soft);}
+  .card .tag{display:inline-block; margin-top:12px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ac); font-weight:600;}
+
+  /* ---- panel ---- */
+  .stage{max-width:1080px; margin:0 auto; padding:64px 28px 30px;}
+  .panel{display:none;}
+  .panel.show{display:block; animation:fade .5s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(14px);}to{opacity:1; transform:translateY(0);}}
+
+  .p-head{border-bottom:1px solid #ddd1b3; padding-bottom:26px; margin-bottom:8px;}
+  .p-head .kicker{color:var(--ac);}
+  .p-head h2{font-family:'Playfair Display',serif; font-size:clamp(30px,4.4vw,46px); line-height:1.02; color:var(--pine); margin:10px 0 0; font-weight:800;}
+  .p-head .lede{font-size:18px; line-height:1.55; color:var(--ink); max-width:640px; margin:16px 0 0;}
+  .p-head .lede b{color:var(--ac);}
+
+  .flow{margin:36px 0 0;}
+  .uc{
+    display:grid; grid-template-columns:64px 1fr; gap:22px; padding:30px 0;
+    border-bottom:1px dashed #d8ccab; opacity:0; transform:translateY(22px);
+  }
+  .uc.in{opacity:1; transform:translateY(0); transition:all .6s cubic-bezier(.2,.7,.2,1);}
+  .uc-no{font-family:'Playfair Display',serif; font-size:40px; line-height:1; color:var(--ac); opacity:.65;}
+  .uc h3{font-family:'Playfair Display',serif; font-size:24px; color:var(--pine); margin:2px 0 0;}
+  .uc .pain{font-size:15px; line-height:1.5; color:var(--ink-soft); margin:10px 0 0; font-style:italic;}
+  .uc .pain::before{content:"The grind: "; font-style:normal; font-weight:600; color:var(--clay); letter-spacing:.3px;}
+  .uc .does{font-size:16.5px; line-height:1.6; color:var(--ink); margin:12px 0 0;}
+  .uc .does::before{content:"With Claude: "; font-weight:600; color:var(--pine);}
+
+  .try{margin:16px 0 0;}
+  .try-btn{
+    font-family:'Spectral',serif; font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--ac); background:transparent; border:1px solid var(--ac); border-radius:2px;
+    padding:8px 16px; cursor:pointer; transition:all .2s ease;
+  }
+  .try-btn:hover{background:var(--ac); color:var(--cream);}
+  .try-body{
+    max-height:0; overflow:hidden; transition:max-height .4s ease; margin-top:0;
+  }
+  .try-body.open{max-height:360px; margin-top:14px;}
+  .prompt{
+    background:var(--pine); color:#e9e0c6; border-radius:4px; padding:18px 18px 16px; position:relative;
+    font-size:14.5px; line-height:1.55;
+  }
+  .prompt .lbl{font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:8px;}
+  .copy{
+    position:absolute; top:12px; right:12px; font-family:'Spectral',serif; font-size:11px; letter-spacing:1px;
+    text-transform:uppercase; background:rgba(205,163,82,.15); color:var(--gold); border:1px solid rgba(205,163,82,.4);
+    border-radius:2px; padding:4px 10px; cursor:pointer; transition:all .2s ease;
+  }
+  .copy:hover{background:var(--gold); color:var(--pine-deep);}
+
+  .p-out{
+    margin:36px 0 0; background:var(--cream); border:1px solid #e2d6b6; border-left:5px solid var(--ac);
+    border-radius:4px; padding:26px 28px;
+  }
+  .p-out .kicker{color:var(--ac);}
+  .p-out p{font-family:'Playfair Display',serif; font-style:italic; font-size:21px; line-height:1.4; color:var(--pine); margin:10px 0 0;}
+
+  /* ---- closing ---- */
+  .end{background:var(--pine); color:var(--cream); margin-top:50px;}
+  .end-inner{max-width:1080px; margin:0 auto; padding:70px 28px;}
+  .end h2{font-family:'Playfair Display',serif; font-size:clamp(30px,5vw,52px); font-weight:800; margin:0; line-height:1.02;}
+  .end h2 em{color:var(--gold); font-style:italic;}
+  .end p{font-size:18px; line-height:1.6; color:#d4caad; max-width:540px; margin:20px 0 0;}
+  .sign{font-family:'Playfair Display',serif; font-size:22px; color:var(--gold); margin:34px 0 0;}
+  .sign small{display:block; font-family:'Spectral',serif; font-size:13px; color:var(--sage); margin-top:4px; letter-spacing:1px;}
+  .end .meta{margin-top:40px; padding-top:22px; border-top:1px solid rgba(205,163,82,.25); font-size:13px; color:#9fae8b; line-height:1.6;}
+  .end .meta a{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="bar">
+  <div class="bar-inner">
+    <div class="bar-brand"><b>AI MASTERCLASS</b> &nbsp;·&nbsp; 13 JUNE &nbsp;·&nbsp; BRACKENHURST</div>
+    <div class="bar-nav" id="nav">
+      <button data-go="sharon" class="on">Sharon</button>
+      <button data-go="eve">Eve</button>
+      <button data-go="mueni">Mueni</button>
+      <button data-go="dennis">Dennis</button>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="kicker" style="color:var(--gold)">Your page, before the day even starts</div>
+    <h1>This one&rsquo;s<br><em>built for you.</em></h1>
+    <p>Not a brochure. A look at exactly what Claude can do for <em>your</em> work, in your words, before you set foot in the forest. Pick your name.</p>
+    <div class="hero-cue"><span>↓ tap your name to see your AI workflow ↓</span></div>
+  </div>
+</div>
+
+<!-- PERSONA PICKER -->
+<div class="pick">
+  <div class="pick-grid" id="picker">
+    <div class="card on" data-go="sharon" style="--ac:var(--clay)">
+      <div class="nm">Sharon</div>
+      <div class="rl">Business Analyst &amp; PM, Odoo</div>
+      <div class="tag">6+ projects, solo</div>
+    </div>
+    <div class="card" data-go="eve" style="--ac:var(--teal)">
+      <div class="nm">Eve</div>
+      <div class="rl">Business Advisor, Odoo</div>
+      <div class="tag">Calls &amp; demos</div>
+    </div>
+    <div class="card" data-go="mueni" style="--ac:var(--plum)">
+      <div class="nm">Mueni</div>
+      <div class="rl">GM, Transport &amp; Logistics</div>
+      <div class="tag">Numbers &amp; reports</div>
+    </div>
+    <div class="card" data-go="dennis" style="--ac:var(--amber)">
+      <div class="nm">Dennis</div>
+      <div class="rl">Odoo Consultant &amp; Robotics</div>
+      <div class="tag">One weekly workflow</div>
+    </div>
+  </div>
+  <p class="pick-hint"><b>Tap any name above</b> to open that person&rsquo;s own tailored Claude AI workflow &mdash; the real use cases for their work, with prompts you can steal.</p>
+</div>
+
+<div class="stage">
+
+  <!-- ============ SHARON ============ -->
+  <div class="panel show" id="sharon" style="--ac:var(--clay)">
+    <div class="p-head">
+      <div class="kicker">Sharon &middot; Odoo BA / PM</div>
+      <h2>Six clients, one of you, zero things slipping.</h2>
+      <p class="lede">You once said every client&rsquo;s data looks different, so cleaning it feels impossible to systematise. Here&rsquo;s the secret: it&rsquo;s usually <b>the same five problems in different clothes.</b> Claude is very good at spotting clothes.</p>
+    </div>
+    <div class="flow">
+      <div class="uc">
+        <div class="uc-no">01</div>
+        <div>
+          <h3>The &ldquo;same five problems&rdquo; cleaner</h3>
+          <p class="pain">Hours lost scrubbing messy client exports in Excel before every import.</p>
+          <p class="does">Drop in any raw export. Claude spots the recurring offenders &mdash; broken formats, duplicates, blank fields, mismatched columns &mdash; and hands back an import-ready sheet, plus a note on what it fixed.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here is a raw client data export for an Odoo import. Clean it for me: standardise formats, flag and remove duplicates, fill or flag blanks, and align the columns to these target fields [paste fields]. Then list every change you made so I can sanity-check it before import.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">02</div>
+        <div>
+          <h3>A cleanup routine you reuse on every client</h3>
+          <p class="pain">You get value from AI, but it&rsquo;s all one-off. Nothing repeatable yet.</p>
+          <p class="does">Turn your best cleanup into a saved, named routine. Next client, you run the routine instead of starting from scratch. One-off becomes a system &mdash; the first thing you could one day package and sell.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Based on how you just cleaned that file, write me a reusable, step-by-step data-prep checklist I can paste in for any future Odoo client. Make it general enough for different data, specific enough that the output is always import-ready.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">03</div>
+        <div>
+          <h3>One view of all six projects</h3>
+          <p class="pain">Juggling 6+ implementations solo &mdash; things slip through the cracks.</p>
+          <p class="does">Paste your scattered project notes. Claude returns a single tracker: per client, where it stands, the next action, and exactly who you&rsquo;re waiting on. Your breathing room, on one screen.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here are notes on all my current Odoo client projects [paste]. Build me a single status tracker: client, stage, next action I owe, who I&rsquo;m waiting on, and anything at risk of slipping this week. Sort it so the most urgent is at the top.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-out">
+      <div class="kicker">What you wanted from the 13th</div>
+      <p>&ldquo;Understand what AI can do for me &mdash; and how to build tools I can monetise.&rdquo; This is brick number one.</p>
+    </div>
+  </div>
+
+  <!-- ============ EVE ============ -->
+  <div class="panel" id="eve" style="--ac:var(--teal)">
+    <div class="p-head">
+      <div class="kicker">Eve &middot; Odoo Business Advisor</div>
+      <h2>Make Claude speak fluent Odoo.</h2>
+      <p class="lede">Your blocker isn&rsquo;t AI &mdash; it&rsquo;s that AI keeps giving you <b>generic business advice</b> when you need it to reason about actual Odoo modules. We fix that on day one.</p>
+    </div>
+    <div class="flow">
+      <div class="uc">
+        <div class="uc-no">01</div>
+        <div>
+          <h3>Teach Claude Odoo, once</h3>
+          <p class="pain">AI output is too generic to be useful for real call prep.</p>
+          <p class="does">Load Claude with your Odoo module knowledge so it stops giving textbook answers and starts reasoning in modules &mdash; Sales, Inventory, Manufacturing, Accounting &mdash; the way you would.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>I&rsquo;m an Odoo Business Advisor. I&rsquo;m going to give you a reference of Odoo&rsquo;s core modules and what each solves [paste]. From now on, when I describe a prospect&rsquo;s problems, map them to specific Odoo modules &mdash; never give generic business advice. Confirm you&rsquo;ve got it.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">02</div>
+        <div>
+          <h3>Prospect notes &rarr; demo-ready in minutes</h3>
+          <p class="pain">Mapping each prospect&rsquo;s pain to the right modules is high-stakes and slow.</p>
+          <p class="does">Paste your discovery-call notes. Claude returns a pain-point-to-module map and a tailored demo script that speaks to that specific business.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here are my discovery-call notes for a prospect [paste]. Map their pain points to specific Odoo modules, flag the two or three that will land hardest in a demo, and draft a short demo script that walks them through exactly those.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">03</div>
+        <div>
+          <h3>The call writes its own follow-up</h3>
+          <p class="pain">Research, summaries and prep eat the whole week.</p>
+          <p class="does">After a call, hand Claude your notes. Out comes a clean summary, a follow-up email in your voice, and tidy notes ready for the CRM. Done before you&rsquo;ve closed the laptop.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Turn these messy call notes [paste] into three things: a 5-line internal summary, a warm follow-up email to the prospect that references what they actually said, and a short CRM note. Keep my tone friendly and direct.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-out">
+      <div class="kicker">What you wanted from the 13th</div>
+      <p>&ldquo;Less manual demo prep &mdash; and to start building AI solutions businesses can actually use.&rdquo; By Monday, you&rsquo;ll have the engine.</p>
+    </div>
+  </div>
+
+  <!-- ============ MUENI ============ -->
+  <div class="panel" id="mueni" style="--ac:var(--plum)">
+    <div class="p-head">
+      <div class="kicker">Mueni &middot; GM, Transport &amp; Logistics</div>
+      <h2>The careful, heavy lifting &mdash; handled.</h2>
+      <p class="lede">You&rsquo;re right to worry about accuracy. So we&rsquo;ll use Claude in a way that <b>always shows its working</b> &mdash; for reconciliations, for reports, and for the research your master&rsquo;s demands.</p>
+    </div>
+    <div class="flow">
+      <div class="uc">
+        <div class="uc-no">01</div>
+        <div>
+          <h3>Reconciliations that show their working</h3>
+          <p class="pain">Chasing mismatches across accounting software and spreadsheets, tracing entries by hand.</p>
+          <p class="does">Paste both sources. Claude finds the mismatches, traces each one, and explains <em>why</em> they don&rsquo;t line up &mdash; so you&rsquo;re reviewing its reasoning, not redoing the work.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here are two sets of records that should match &mdash; an accounting export and a spreadsheet [paste both]. Find every mismatch, show me the specific entries involved, and explain the likely reason for each. Don&rsquo;t guess silently &mdash; flag anything you&rsquo;re unsure about.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">02</div>
+        <div>
+          <h3>Numbers &rarr; a report the board can read</h3>
+          <p class="pain">Financial reporting swallows hours, especially at month-end and audits.</p>
+          <p class="does">Hand over the raw figures. Claude turns them into a clear summary with plain-English commentary on what moved and why &mdash; board-ready, not spreadsheet-shaped.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here are this month&rsquo;s financial figures [paste]. Write me a concise board summary: the headline numbers, what changed versus last month, and a short commentary on anything that needs attention. Professional tone, no jargon.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">03</div>
+        <div>
+          <h3>Research with receipts</h3>
+          <p class="pain">Worried about credibility &mdash; especially for academic work where sources matter.</p>
+          <p class="does">Claude does the digging and cites where each point comes from, so you verify before you rely. Trust, but check &mdash; and the checking is fast.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>I&rsquo;m researching [topic] for an academic assignment. Give me the key points, but for each one tell me where it comes from and how confident I should be. Flag anything that needs a primary source before I cite it.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-out">
+      <div class="kicker">What you wanted from the 13th</div>
+      <p>&ldquo;Make the tools I already have save real time every week.&rdquo; Reconciliation week just got a lot shorter.</p>
+    </div>
+  </div>
+
+  <!-- ============ DENNIS ============ -->
+  <div class="panel" id="dennis" style="--ac:var(--amber)">
+    <div class="p-head">
+      <div class="kicker">Dennis &middot; Odoo Consultant &amp; Robotics Student</div>
+      <h2>One workflow that runs your week.</h2>
+      <p class="lede">You don&rsquo;t need ten clever tricks. You said it best: <b>one clear workflow you can repeat every week without thinking.</b> So that&rsquo;s exactly what we build &mdash; ready by the Monday after.</p>
+    </div>
+    <div class="flow">
+      <div class="uc">
+        <div class="uc-no">01</div>
+        <div>
+          <h3>Your repeatable consulting week</h3>
+          <p class="pain">You don&rsquo;t know where to start with AI agents, and the week never makes the space.</p>
+          <p class="does">One saved workflow that carries a prospect from pre-call research, to a scoping draft, to follow-up &mdash; the same way every time. You run it; it runs your admin.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Help me design one repeatable weekly workflow for my Odoo consulting. The steps I do every week are: pre-call research, scoping documents, and client follow-ups. Turn this into a simple sequence I can run with you each Monday, and tell me what to paste in at each step.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">02</div>
+        <div>
+          <h3>Messy notes &rarr; scoping doc in minutes</h3>
+          <p class="pain">The real bottleneck isn&rsquo;t skill &mdash; it&rsquo;s finding time to sit and write the proposal at all.</p>
+          <p class="does">Dump your raw call notes. Claude returns a structured scoping draft you just tidy and send, instead of facing a blank page after a long day.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>Here are rough notes from a client meeting [paste]. Draft a structured scoping document: client context, problems to solve, proposed Odoo solution, rough scope and next steps. Leave clear placeholders where I need to add detail.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="uc">
+        <div class="uc-no">03</div>
+        <div>
+          <h3>A study buddy for the weekend</h3>
+          <p class="pain">Robotics and your Manufacturing-plus-AI thread get squeezed into the margins.</p>
+          <p class="does">Claude explains the hard concepts, reviews your code, and keeps your learning moving in the few hours you can spare &mdash; so the bigger dream doesn&rsquo;t stall.</p>
+          <div class="try">
+            <button class="try-btn">Try this prompt</button>
+            <div class="try-body"><div class="prompt"><button class="copy">Copy</button><span class="lbl">Starter prompt</span>I&rsquo;m studying robotics in limited weekend hours. Explain [concept] simply, then quiz me on it. After that, here&rsquo;s some code I wrote [paste] &mdash; review it, point out what&rsquo;s wrong, and show me the cleaner way.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-out">
+      <div class="kicker">What you wanted from the 13th</div>
+      <p>&ldquo;One clear workflow I can repeat every week without thinking.&rdquo; That&rsquo;s the whole plan for your afternoon.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- CLOSING -->
+<div class="end">
+  <div class="end-inner">
+    <div class="kicker" style="color:var(--gold)">See you Saturday</div>
+    <h2>Same forest. Same lunch.<br><em>Four very different superpowers.</em></h2>
+    <p>Everything above is just the trailer. On the 13th we build it together, on your real work, with your own hands.</p>
+    <div class="sign">Ian Githu<small>Your host for the day</small></div>
+    <div class="meta">
+      AI Masterclass &middot; Saturday 13 June 2026 &middot; 9:00 AM to 5:00 PM<br>
+      Brackenhurst, Tigoni, Limuru &middot; <a href="https://www.brackenhurst.com/">brackenhurst.com</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  var people = ['sharon','eve','mueni','dennis'];
+
+  function go(id){
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('show', p.id===id); });
+    document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.go===id); });
+    document.querySelectorAll('#picker .card').forEach(function(c){ c.classList.toggle('on', c.dataset.go===id); });
+    var active = document.getElementById(id);
+    active.querySelectorAll('.uc').forEach(function(uc,i){
+      uc.classList.remove('in');
+      setTimeout(function(){ uc.classList.add('in'); }, 120 + i*130);
+    });
+    if(history.replaceState){ history.replaceState(null,'','#'+id); }
+  }
+
+  document.querySelectorAll('[data-go]').forEach(function(el){
+    el.addEventListener('click', function(){ go(el.dataset.go); window.scrollTo({top: document.querySelector('.stage').offsetTop-70, behavior:'smooth'}); });
+  });
+
+  document.querySelectorAll('.try-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var body = btn.nextElementSibling;
+      var open = body.classList.toggle('open');
+      btn.textContent = open ? 'Hide prompt' : 'Try this prompt';
+    });
+  });
+
+  document.querySelectorAll('.copy').forEach(function(c){
+    c.addEventListener('click', function(e){
+      e.stopPropagation();
+      var text = c.parentElement.innerText.replace(/^Copy\s*/,'').replace(/^Starter prompt\s*/,'').trim();
+      navigator.clipboard.writeText(text).then(function(){
+        var old=c.textContent; c.textContent='Copied ✓';
+        setTimeout(function(){ c.textContent=old; }, 1500);
+      });
+    });
+  });
+
+  window.addEventListener('load', function(){
+    var start = (location.hash||'').replace('#','');
+    if(people.indexOf(start)>=0){ go(start); } else { go('sharon'); }
+  });
+</script>
+
+</body>
+</html>
