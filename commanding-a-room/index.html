@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The 5 Rules of Commanding a Room — el-speak</title>
+  <meta name="description" content="Master the five principles that separate speakers who are merely heard from those who are truly remembered." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #004225;
+      --green-dark:  #002D19;
+      --green-light: #005A32;
+      --gold:        #C9960A;
+      --gold-light:  #e8b020;
+      --off-white:   #f7f6f2;
+      --text:        #1a1a1a;
+      --text-muted:  #555;
+      --border:      #e0ddd6;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--off-white);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--green-dark);
+      padding: 0;
+    }
+
+    .topbar {
+      background: var(--gold);
+      text-align: center;
+      padding: 8px 24px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green-dark);
+    }
+
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 48px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      margin-bottom: 36px;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .brand-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(201,150,10,0.18);
+      color: var(--gold-light);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      border: 1px solid rgba(201,150,10,0.35);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    h1 span {
+      color: var(--gold);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.65);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* ── INTRO ── */
+    .intro {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .intro-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 44px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .intro-inner { grid-template-columns: 1fr; gap: 20px; }
+    }
+
+    .stat {
+      text-align: center;
+      padding: 20px;
+      border-radius: 10px;
+      background: var(--off-white);
+      border: 1px solid var(--border);
+    }
+
+    .stat-number {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 56px 24px;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .intro-text {
+      font-size: 1.08rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin-bottom: 56px;
+      line-height: 1.8;
+    }
+
+    /* ── RULES ── */
+    .rules {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .rule {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .rule:hover {
+      box-shadow: 0 8px 32px rgba(0,66,37,0.08);
+    }
+
+    .rule-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 28px 28px 0;
+    }
+
+    .rule-number {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--green);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .rule-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--green-dark);
+      line-height: 1.25;
+      padding-top: 4px;
+    }
+
+    .rule-title em {
+      display: block;
+      font-style: normal;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .rule-body {
+      padding: 16px 28px 24px 96px;
+    }
+
+    @media (max-width: 520px) {
+      .rule-header { flex-direction: column; gap: 12px; }
+      .rule-body { padding: 16px 24px 24px; }
+    }
+
+    .rule-body p {
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.75;
+    }
+
+    .tip-box {
+      background: rgba(0,66,37,0.05);
+      border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin-top: 4px;
+    }
+
+    .tip-box strong {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tip-box p {
+      font-size: 0.88rem;
+      margin: 0;
+      color: var(--text);
+    }
+
+    /* ── SUMMARY ── */
+    .summary {
+      margin-top: 56px;
+      background: var(--green);
+      border-radius: 16px;
+      padding: 40px;
+      color: #fff;
+    }
+
+    .summary h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .summary-item::before {
+      content: '';
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    /* ── CTA ── */
+    .cta {
+      margin-top: 56px;
+      text-align: center;
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 15px 36px;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+      transition: background 0.2s;
+    }
+
+    .cta-button:hover {
+      background: var(--green-light);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--green-dark);
+      color: rgba(255,255,255,0.45);
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 0.8rem;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="topbar">Free Public Speaking Resource — el-speak.com</div>
+    <div class="header-inner">
+      <a class="brand" href="https://el-speak.com">
+        <div class="brand-dot"></div>
+        <span class="brand-name">el-speak</span>
+      </a>
+      <div class="tag">Public Speaking Guide</div>
+      <h1>The <span>5 Rules</span> of<br>Commanding a Room</h1>
+      <p class="subtitle">The principles that separate speakers who are merely heard from those who are truly remembered.</p>
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="intro">
+    <div class="intro-inner">
+      <div class="stat">
+        <div class="stat-number">7%</div>
+        <div class="stat-label">of impact comes from your words alone</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">55%</div>
+        <div class="stat-label">comes from body language and presence</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">38%</div>
+        <div class="stat-label">comes from your tone and delivery</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+    <div class="section-label">The Five Rules</div>
+    <p class="intro-text">
+      Great speakers are not born — they are built. Every habit below can be learned, practised, and owned. Work through one rule at a time and you will feel the shift in how rooms respond to you.
+    </p>
+
+    <div class="rules">
+
+      <!-- RULE 1 -->
+      <div class="rule">
+        <div class="rule-header">
+          <div class="rule-number">1</div>
+          <div class="rule-title">
+            <em>Rule One</em>
+            Own Your Entrance
+          </div>
+        </div>
+        <div class="rule-body">
+          <p>The room forms its opinion in the first eight seconds. Before you say a single word, you are already communicating. Walk in with intention — shoulders back, pace measured, eyes scanning the room as if you already belong there. Because you do.</p>
+          <p>Rushing, fidgeting, or looking at your phone as you enter signals anxiety and shrinks your authority before you have spoken. A commanding entrance is simply a deliberate one.</p>
+          <div class="tip-box">
+            <strong>Practice drill</strong>
+            <p>Before your next presentation, pause for three full seconds at the entrance point. Breathe. Then walk. Notice how the energy shifts when you stop rushing.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULE 2 -->
+      <div class="rule">
+        <div class="rule-header">
+          <div class="rule-number">2</div>
+          <div class="rule-title">
+            <em>Rule Two</em>
+            Silence Is Your Most Powerful Tool
+          </div>
+        </div>
+        <div class="rule-body">
+          <p>Nervous speakers fill silence with words. Commanding speakers use silence as punctuation. A well-placed pause after a key point gives your audience time to absorb it, signals that you are not rushing, and creates a magnetic sense of control.</p>
+          <p>The silence will feel far longer to you than it does to your audience. Two seconds of quiet feels like ten seconds when you are the one standing there — but to the room it reads as confidence.</p>
+          <div class="tip-box">
+            <strong>Practice drill</strong>
+            <p>After your strongest statement in any talk, count silently to three before continuing. Let the room sit with it. The discomfort you feel is the confidence the audience sees.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULE 3 -->
+      <div class="rule">
+        <div class="rule-header">
+          <div class="rule-number">3</div>
+          <div class="rule-title">
+            <em>Rule Three</em>
+            Speak to One Person at a Time
+          </div>
+        </div>
+        <div class="rule-body">
+          <p>Most speakers scan the room continuously, making eye contact with no one. Commanding speakers do the opposite — they hold eye contact with one individual for a complete thought (usually five to seven seconds), then move to another. This turns a presentation into a series of one-to-one conversations.</p>
+          <p>When someone in an audience feels personally seen, they lean in. And when one person leans in, the people around them notice — and follow.</p>
+          <div class="tip-box">
+            <strong>Practice drill</strong>
+            <p>In your next talk, pick three anchor points in the room — left, centre, right. Deliver complete sentences to each. Resist the urge to sweep. Finish the thought, then move.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULE 4 -->
+      <div class="rule">
+        <div class="rule-header">
+          <div class="rule-number">4</div>
+          <div class="rule-title">
+            <em>Rule Four</em>
+            Lower Your Register Under Pressure
+          </div>
+        </div>
+        <div class="rule-body">
+          <p>When we are nervous, our voice rises in pitch, speeds up, and loses its resonance. This is the voice of someone being chased. To command a room, train the opposite response — when the pressure rises, consciously slow down and drop your pitch.</p>
+          <p>A lower, slower voice signals safety and authority. It is also far easier to listen to. The audience relaxes, which relaxes you, which deepens your presence — a virtuous cycle that begins with a single intentional breath.</p>
+          <div class="tip-box">
+            <strong>Practice drill</strong>
+            <p>Record yourself reading one paragraph at your natural pace, then again at 70% of that speed. Listen back. The slower version will almost always sound more authoritative, not boring.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULE 5 -->
+      <div class="rule">
+        <div class="rule-header">
+          <div class="rule-number">5</div>
+          <div class="rule-title">
+            <em>Rule Five</em>
+            Close with Conviction, Not a Question
+          </div>
+        </div>
+        <div class="rule-body">
+          <p>How a speaker ends is what the audience remembers. Weak closings — "So… that's basically it," "Any questions?", "I think that's all I have" — dissolve the authority you built. They signal that you were not sure you had earned the room's time.</p>
+          <p>A commanding close is a statement, not an apology. Summarise your single most important point, say it with finality, and then stop talking. The silence after a strong closing line is not awkward — it is applause waiting to happen.</p>
+          <div class="tip-box">
+            <strong>Practice drill</strong>
+            <p>Write your closing line before you write anything else in your next talk. Make it one sentence. Make it declarative. Memorise it word for word and deliver it without looking at notes.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="summary">
+      <h2>Your Five-Rule Checklist</h2>
+      <div class="summary-grid">
+        <div class="summary-item">Own your entrance — pause, then walk</div>
+        <div class="summary-item">Use silence as punctuation</div>
+        <div class="summary-item">Hold eye contact for full thoughts</div>
+        <div class="summary-item">Slow down and lower under pressure</div>
+        <div class="summary-item">Close with a statement, not a question</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <p>Ready to take your speaking further?</p>
+      <a class="cta-button" href="https://sms.el-speak.com">Explore el-speak SMS Coaching →</a>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 <a href="https://el-speak.com">el-speak.com</a> — All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
