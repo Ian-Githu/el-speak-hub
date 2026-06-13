@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Masterclass with Ian Githu · Build Your Own AI Assistant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/128/three.min.js"></script>
+<style>
+  :root {
+    --forest-deep: #1F3A2E;
+    --forest-mid: #2F4F3F;
+    --cream: #F6F2E9;
+    --parchment: #E8DCC8;
+    --moss: #7A9E7E;
+    --amber: #D98E3F;
+    --ink: #1A1A17;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Serif Pro', Georgia, serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  .eyebrow {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    opacity: 0.75;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--forest-deep) 0%, var(--forest-mid) 100%);
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  #hero-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.85;
+  }
+
+  .hero-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+  }
+
+  .hero .eyebrow { color: var(--moss); margin-bottom: 1.5rem; }
+
+  .hero h1 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(2.4rem, 7vw, 4.4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero h1 .accent { color: var(--amber); }
+
+  .hero p.sub {
+    font-size: 1.2rem;
+    opacity: 0.88;
+    max-width: 580px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary, .btn-secondary {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.95rem 2.2rem;
+    border-radius: 3px;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: var(--forest-deep);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(217,142,63,0.4);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid rgba(246,242,233,0.35);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--moss);
+    transform: translateY(-2px);
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--moss);
+    z-index: 1;
+    animation: bob 2.2s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
+    50% { transform: translate(-50%, 8px); opacity: 1; }
+  }
+
+  /* INTRO */
+  .intro {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem 1rem;
+    font-size: 1.18rem;
+  }
+
+  .intro p { margin-bottom: 1.25rem; }
+
+  /* SECTION GENERIC */
+  .section {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    border-top: 1px solid rgba(31,58,46,0.12);
+  }
+
+  .section .eyebrow { color: var(--forest-mid); margin-bottom: 0.85rem; }
+
+  .section h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--forest-deep);
+    margin-bottom: 1rem;
+  }
+
+  .section p { margin-bottom: 1rem; font-size: 1.05rem; }
+
+  /* RECAP STRIP */
+  .recap-strip {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+  }
+
+  .recap-points {
+    list-style: none;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .recap-points li {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    font-size: 1rem;
+    background: var(--parchment);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+  }
+
+  .recap-points .mark {
+    color: var(--amber);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* PRICING SECTION */
+  .pricing-section {
+    position: relative;
+    background: var(--forest-deep);
+    color: var(--cream);
+    padding: 5rem 1.5rem;
+    overflow: hidden;
+  }
+
+  #pricing-canvas {
+    position: absolute;
+    top: 0; right: -10%;
+    width: 60%; height: 100%;
+    z-index: 0;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .pricing-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .pricing-inner .eyebrow { color: var(--moss); margin-bottom: 1rem; }
+
+  .pricing-inner h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    max-width: 480px;
+  }
+
+  .pricing-inner > p {
+    font-size: 1.1rem;
+    opacity: 0.88;
+    max-width: 520px;
+    margin-bottom: 2.5rem;
+  }
+
+  .pricing-cards {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .price-card {
+    background: rgba(246,242,233,0.06);
+    border: 1px solid rgba(246,242,233,0.14);
+    border-radius: 8px;
+    padding: 1.75rem 1.5rem;
+    backdrop-filter: blur(2px);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .price-card:hover {
+    border-color: var(--amber);
+    transform: translateY(-4px);
+  }
+
+  .price-card .tag {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-bottom: 0.75rem;
+  }
+
+  .price-card h3 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--cream);
+  }
+
+  .price-card .amount {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--amber);
+    margin-bottom: 0.4rem;
+  }
+
+  .price-card .amount span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--moss);
+  }
+
+  .price-card p.desc {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    margin-bottom: 0;
+  }
+
+  .pricing-note {
+    margin-top: 2.5rem;
+    font-size: 0.92rem;
+    opacity: 0.65;
+    max-width: 520px;
+  }
+
+  /* QUOTE */
+  .quote-block {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem;
+    border-top: 1px solid rgba(31,58,46,0.12);
+    text-align: center;
+  }
+
+  .quote-block blockquote {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--forest-deep);
+    line-height: 1.4;
+    margin-bottom: 1rem;
+  }
+
+  .quote-block cite {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    font-style: normal;
+  }
+
+  /* CTA / FOOTER */
+  .cta {
+    position: relative;
+    background: var(--forest-deep);
+    color: var(--cream);
+    text-align: center;
+    padding: 5rem 1.5rem 4rem;
+    overflow: hidden;
+  }
+
+  #cta-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .cta-inner { position: relative; z-index: 1; }
+
+  .cta h2 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .cta p { max-width: 480px; margin: 0 auto 2rem; opacity: 0.85; }
+
+  footer {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 0.85rem;
+    color: var(--forest-mid);
+    opacity: 0.7;
+    background: var(--cream);
+  }
+
+  footer .author {
+    font-weight: 700;
+    color: var(--forest-deep);
+    opacity: 1;
+    margin-bottom: 0.2rem;
+  }
+
+  @media (max-width: 480px) {
+    .hero-inner { padding: 0 1.25rem; }
+    .section, .intro, .quote-block, .recap-strip, .pricing-inner { padding-left: 1.25rem; padding-right: 1.25rem; }
+    #pricing-canvas { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    canvas { display: none; }
+    .scroll-hint { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">AI &amp; Communications · Live Workshop</p>
+    <h1>Stop scrolling.<br>Start <span class="accent">building</span> your AI assistant.</h1>
+    <p class="sub">A hands-on day in the forest with Claude AI, tailored to your actual work. Build something real, walk away using it the same week.</p>
+    <div class="hero-cta">
+      <a href="#pricing" class="btn-primary">See workshop options</a>
+      <a href="#recap" class="btn-secondary">What happened last time</a>
+    </div>
+  </div>
+  <p class="scroll-hint">Scroll ↓</p>
+</section>
+
+<div class="intro" id="recap">
+  <p>In June 2026, I ran a pilot: a small group, a day at Brackenhurst in Tigoni, and one goal, leave with an AI assistant that actually runs part of your week. No theory-only slides, no "AI 101." Everyone built something real and tested it before lunch.</p>
+  <p>It was free, because I wanted to get the format right before charging for it. It worked. Here's what came out of it, and what the next cohorts look like.</p>
+</div>
+
+<div class="recap-strip">
+  <ul class="recap-points">
+    <li><span class="mark">01</span><span>Start with one workflow, not ten. The biggest wins came from picking a single recurring task and automating that completely.</span></li>
+    <li><span class="mark">02</span><span>Give the assistant context, not just instructions. The setups that stuck were the ones built around how people actually think and work.</span></li>
+    <li><span class="mark">03</span><span>Confirm before anything irreversible. Every good build had a human checkpoint before sending, publishing, or deleting.</span></li>
+    <li><span class="mark">04</span><span>Connection still beats configuration. The best builds were the ones people could explain in plain language, and that's what kept them using it after.</span></li>
+  </ul>
+</div>
+
+<div class="quote-block">
+  <blockquote>"A perfect deck means nothing if the room isn't with you. The same is true for a perfect workflow. If it doesn't fit how you actually think, you won't use it."</blockquote>
+  <cite>Ian Githu, opening remarks, June 2026</cite>
+</div>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <canvas id="pricing-canvas"></canvas>
+  <div class="pricing-inner">
+    <p class="eyebrow">Next Cohorts</p>
+    <h2>The pilot was free. The next ones are worth paying for.</h2>
+    <p>Same format that worked in June: small group, real work, one day, an assistant you actually use afterward. Choose the option that fits your team.</p>
+
+    <div class="pricing-cards">
+      <div class="price-card">
+        <p class="tag">Individual Seat</p>
+        <h3>Masterclass Day</h3>
+        <div class="amount">KES 150,000 <span>/ person</span></div>
+        <p class="desc">Full-day, hands-on. Build and configure your own AI assistant for your real work, with direct guidance throughout.</p>
+      </div>
+      <div class="price-card">
+        <p class="tag">Small Group</p>
+        <h3>Team Cohort</h3>
+        <div class="amount">KES 150,000 <span>/ person</span></div>
+        <p class="desc">Bring your team. Same format, shared context, and a setup that fits how your team already works together.</p>
+      </div>
+      <div class="price-card">
+        <p class="tag">Custom</p>
+        <h3>In-House Session</h3>
+        <div class="amount">Let's talk</div>
+        <p class="desc">On-site, tailored to your organisation's tools and workflows. Scoped after a short discovery call.</p>
+      </div>
+    </div>
+
+    <p class="pricing-note">Spaces are intentionally small to keep the hands-on quality of the pilot. Get in touch to check availability for the next date.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <canvas id="cta-canvas"></canvas>
+  <div class="cta-inner">
+    <h2>Ready to build yours?</h2>
+    <p>Reach out and I'll walk you through the format, dates, and what to bring. Spaces fill quickly, small groups are the whole point.</p>
+    <a href="https://www.linkedin.com/in/iangithu" class="btn-primary">Get in touch</a>
+  </div>
+</section>
+
+<footer>
+  <p class="author">Ian Githu</p>
+  <p>Speaker &amp; Communications Professional · el-speak.com</p>
+  <p style="margin-top:0.5rem;">June 2026</p>
+</footer>
+
+<script>
+  // Respect reduced motion preference
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduceMotion && window.THREE) {
+
+    // ---------- HERO: floating particle canopy ----------
+    (function heroScene() {
+      const canvas = document.getElementById('hero-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.z = 18;
+
+      function resize() {
+        const w = canvas.clientWidth || window.innerWidth;
+        const h = canvas.clientHeight || window.innerHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      resize();
+
+      // Particle field: soft amber/moss points drifting like light through canopy
+      const count = 220;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const forest = new THREE.Color(0x7A9E7E);
+      const amber = new THREE.Color(0xD98E3F);
+
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 40;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 24;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
+
+        const c = Math.random() > 0.82 ? amber : forest;
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.22,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false
+      });
+
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      // Low-poly icosahedron "node" cluster, slowly rotating
+      const icoGeo = new THREE.IcosahedronGeometry(4.5, 0);
+      const icoMat = new THREE.MeshBasicMaterial({
+        color: 0xD98E3F,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.35
+      });
+      const ico = new THREE.Mesh(icoGeo, icoMat);
+      ico.position.set(0, -1, -6);
+      scene.add(ico);
+
+      const icoGeo2 = new THREE.IcosahedronGeometry(2.4, 1);
+      const icoMat2 = new THREE.MeshBasicMaterial({
+        color: 0x7A9E7E,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.45
+      });
+      const ico2 = new THREE.Mesh(icoGeo2, icoMat2);
+      ico2.position.set(6, 3, -4);
+      scene.add(ico2);
+
+      let frame = 0;
+      function animate() {
+        frame += 0.0035;
+        points.rotation.y = frame * 0.6;
+        points.rotation.x = Math.sin(frame * 0.4) * 0.05;
+        ico.rotation.y = frame * 1.2;
+        ico.rotation.x = frame * 0.8;
+        ico2.rotation.y = -frame * 1.5;
+        ico2.rotation.x = -frame * 0.9;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+      window.addEventListener('resize', resize);
+    })();
+
+    // ---------- PRICING: drifting node cluster ----------
+    (function pricingScene() {
+      const canvas = document.getElementById('pricing-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.z = 14;
+
+      function resize() {
+        const w = canvas.clientWidth || canvas.parentElement.clientWidth;
+        const h = canvas.clientHeight || canvas.parentElement.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      resize();
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // Cluster of connected nodes (spheres + lines)
+      const nodeCount = 9;
+      const nodePositions = [];
+      const sphereGeo = new THREE.SphereGeometry(0.18, 12, 12);
+      const amberMat = new THREE.MeshBasicMaterial({ color: 0xD98E3F });
+      const mossMat = new THREE.MeshBasicMaterial({ color: 0x7A9E7E });
+
+      for (let i = 0; i < nodeCount; i++) {
+        const pos = new THREE.Vector3(
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 4
+        );
+        nodePositions.push(pos);
+        const mat = Math.random() > 0.7 ? amberMat : mossMat;
+        const sphere = new THREE.Mesh(sphereGeo, mat);
+        sphere.position.copy(pos);
+        group.add(sphere);
+      }
+
+      // Connect nearby nodes with thin lines
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x7A9E7E, transparent: true, opacity: 0.25 });
+      for (let i = 0; i < nodePositions.length; i++) {
+        for (let j = i + 1; j < nodePositions.length; j++) {
+          if (nodePositions[i].distanceTo(nodePositions[j]) < 4.5) {
+            const lineGeo = new THREE.BufferGeometry().setFromPoints([nodePositions[i], nodePositions[j]]);
+            group.add(new THREE.Line(lineGeo, lineMat));
+          }
+        }
+      }
+
+      let frame = 0;
+      function animate() {
+        frame += 0.003;
+        group.rotation.y = frame;
+        group.rotation.x = Math.sin(frame * 0.6) * 0.2;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+      window.addEventListener('resize', resize);
+    })();
+
+    // ---------- CTA: gentle ambient particles ----------
+    (function ctaScene() {
+      const canvas = document.getElementById('cta-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+      camera.position.z = 12;
+
+      function resize() {
+        const w = canvas.clientWidth || canvas.parentElement.clientWidth;
+        const h = canvas.clientHeight || canvas.parentElement.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      resize();
+
+      const count = 140;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const amber = new THREE.Color(0xD98E3F);
+      const cream = new THREE.Color(0xF6F2E9);
+
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 30;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 18;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+        const c = Math.random() > 0.85 ? amber : cream;
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.16,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.5,
+        depthWrite: false
+      });
+
+      const points = new THREE.Points(geo, mat);
+      scene.add(points);
+
+      let frame = 0;
+      function animate() {
+        frame += 0.002;
+        points.rotation.y = frame * 0.4;
+        points.position.y = Math.sin(frame * 2) * 0.5;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+      window.addEventListener('resize', resize);
+    })();
+  }
+</script>
+
+</body>
+</html>
