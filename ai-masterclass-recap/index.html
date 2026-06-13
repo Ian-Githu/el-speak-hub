@@ -4,705 +4,1258 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Masterclass with Ian Githu · Build Your Own AI Assistant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <style>
-  :root {
-    --forest-deep: #1F3A2E;
-    --forest-mid: #2F4F3F;
-    --cream: #F6F2E9;
-    --parchment: #E8DCC8;
-    --moss: #7A9E7E;
-    --amber: #D98E3F;
-    --ink: #1A1A17;
-  }
+:root {
+  --forest-deep: #1F3A2E;
+  --forest-mid:  #2F4F3F;
+  --cream:       #F6F2E9;
+  --parchment:   #E8DCC8;
+  --moss:        #7A9E7E;
+  --amber:       #D98E3F;
+  --ink:         #1A1A17;
+}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: auto; }
 
-  html { scroll-behavior: smooth; }
+body {
+  font-family: 'Source Serif Pro', Georgia, serif;
+  background: var(--cream);
+  color: var(--ink);
+  line-height: 1.65;
+  overflow-x: hidden;
+  cursor: none;
+}
 
-  body {
-    font-family: 'Source Serif Pro', Georgia, serif;
-    background: var(--cream);
-    color: var(--ink);
-    line-height: 1.65;
-    overflow-x: hidden;
-  }
+/* ── LOADER ──────────────────────────────────── */
+#loader {
+  position: fixed;
+  inset: 0;
+  background: var(--forest-deep);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+}
+.loader-pct {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(4rem, 15vw, 9rem);
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  min-width: 3ch;
+  text-align: center;
+}
+.loader-label {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+.loader-bar-track {
+  width: 220px;
+  height: 1px;
+  background: rgba(246,242,233,0.12);
+  overflow: hidden;
+}
+.loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--amber);
+  transition: width 0.3s ease;
+}
 
-  .eyebrow {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    font-weight: 600;
-    opacity: 0.75;
-  }
+/* ── GRAIN ───────────────────────────────────── */
+.grain {
+  position: fixed;
+  inset: -100px;
+  width: calc(100% + 200px);
+  height: calc(100% + 200px);
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.038;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  animation: grain 0.35s steps(1) infinite;
+}
+@keyframes grain {
+  0%   { transform: translate(0,0); }
+  14%  { transform: translate(-3%,-4%); }
+  28%  { transform: translate(4%, 2%); }
+  42%  { transform: translate(-2%, 5%); }
+  57%  { transform: translate(3%,-2%); }
+  71%  { transform: translate(-4%, 3%); }
+  85%  { transform: translate(2%,-3%); }
+  100% { transform: translate(3%, 1%); }
+}
 
-  /* HERO */
-  .hero {
-    position: relative;
-    min-height: 100vh;
-    background: linear-gradient(160deg, var(--forest-deep) 0%, var(--forest-mid) 100%);
-    color: var(--cream);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    overflow: hidden;
-  }
+/* ── SCROLL PROGRESS ─────────────────────────── */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--amber);
+  z-index: 9997;
+  pointer-events: none;
+  transform-origin: left;
+}
 
-  #hero-canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-    opacity: 0.85;
-  }
+/* ── CUSTOM CURSOR ───────────────────────────── */
+#cur {
+  position: fixed;
+  top: 0; left: 0;
+  width: 8px; height: 8px;
+  background: var(--amber);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .25s, height .25s, opacity .25s;
+  will-change: transform;
+}
+#cur.big { width: 52px; height: 52px; opacity: 0.3; }
+#cur.light { background: var(--cream); }
 
-  .hero-inner {
-    max-width: 760px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-    padding: 0 1.5rem;
-  }
+#cur-ring {
+  position: fixed;
+  top: 0; left: 0;
+  width: 40px; height: 40px;
+  border: 1px solid var(--amber);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  transition: opacity .4s, border-color .3s;
+  will-change: transform;
+}
+#cur-ring.visible { opacity: 1; }
+#cur-ring.light { border-color: rgba(246,242,233,0.6); }
 
-  .hero .eyebrow { color: var(--moss); margin-bottom: 1.5rem; }
+/* ── EYEBROW ─────────────────────────────────── */
+.eyebrow {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.7;
+  display: block;
+}
 
-  .hero h1 {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: clamp(2.4rem, 7vw, 4.4rem);
-    font-weight: 700;
-    line-height: 1.08;
-    letter-spacing: -0.01em;
-    margin-bottom: 1.5rem;
-  }
+/* ── HERO ────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(155deg, var(--forest-deep) 0%, var(--forest-mid) 100%);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+.hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  padding: 0 1.5rem;
+}
+.hero .eyebrow { color: var(--moss); margin-bottom: 1.6rem; }
+.hero h1 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(2.8rem, 8vw, 5.2rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.6rem;
+}
+.hero h1 .accent { color: var(--amber); }
+.hero p.sub {
+  font-size: 1.15rem;
+  opacity: 0.85;
+  max-width: 520px;
+  margin: 0 auto 2.8rem;
+}
+.hero-cta {
+  display: inline-flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
-  .hero h1 .accent { color: var(--amber); }
+/* Reveal wrappers for character animation */
+.reveal-line { overflow: hidden; display: inline-block; vertical-align: bottom; }
+.reveal-line-block { overflow: hidden; display: block; }
+.char, .word { display: inline-block; will-change: transform; }
 
-  .hero p.sub {
-    font-size: 1.2rem;
-    opacity: 0.88;
-    max-width: 580px;
-    margin: 0 auto 2.5rem;
-  }
+/* ── BUTTONS ─────────────────────────────────── */
+.btn-primary, .btn-secondary {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 1rem 2.4rem;
+  border-radius: 3px;
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-block;
+  position: relative;
+  cursor: none;
+  overflow: hidden;
+}
+.btn-primary { background: var(--amber); color: var(--forest-deep); }
+.btn-secondary { background: transparent; color: var(--cream); border: 1px solid rgba(246,242,233,0.3); }
+.btn-secondary:hover { border-color: var(--moss); }
+.btn-inner { display: block; pointer-events: none; }
 
-  .hero-cta {
-    display: inline-flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+/* ── SCROLL HINT ─────────────────────────────── */
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--moss);
+  z-index: 2;
+  animation: bob 2.4s ease-in-out infinite;
+}
+@keyframes bob {
+  0%,100% { transform: translate(-50%,0);   opacity: 0.45; }
+  50%      { transform: translate(-50%,9px); opacity: 1; }
+}
 
-  .btn-primary, .btn-secondary {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 700;
-    text-decoration: none;
-    padding: 0.95rem 2.2rem;
-    border-radius: 3px;
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    display: inline-block;
-  }
+/* ── MARQUEE ─────────────────────────────────── */
+.marquee-strip {
+  overflow: hidden;
+  padding: 1.1rem 0;
+  border-top: 1px solid rgba(246,242,233,0.1);
+  border-bottom: 1px solid rgba(246,242,233,0.1);
+  background: var(--forest-deep);
+}
+.marquee-strip.light {
+  background: var(--parchment);
+  border-color: rgba(31,58,46,0.1);
+}
+.marquee-track {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+}
+.marquee-strip.slow .marquee-track { animation-duration: 28s; }
+.marquee-strip.fast .marquee-track { animation-duration: 13s; }
+.marquee-strip.reverse .marquee-track { animation-direction: reverse; }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-item {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-right: 2.5rem;
+  flex-shrink: 0;
+  color: var(--cream);
+}
+.marquee-strip.light .marquee-item { color: var(--forest-deep); }
+.marquee-dot {
+  color: var(--amber);
+  margin-right: 2.5rem;
+}
 
-  .btn-primary {
-    background: var(--amber);
-    color: var(--forest-deep);
-  }
+/* ── INTRO ───────────────────────────────────── */
+.intro {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 1.5rem;
+  font-size: 1.18rem;
+}
+.intro p { margin-bottom: 1.3rem; }
 
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(217,142,63,0.4);
-  }
+/* ── DIVIDER ─────────────────────────────────── */
+.divider {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.divider-line {
+  height: 1px;
+  background: rgba(31,58,46,0.13);
+  width: 0%;
+  transform-origin: left;
+}
 
-  .btn-secondary {
-    background: transparent;
-    color: var(--cream);
-    border: 1px solid rgba(246,242,233,0.35);
-  }
+/* ── RECAP ───────────────────────────────────── */
+.recap-strip {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 4.5rem;
+}
+.recap-points { list-style: none; display: grid; gap: 0.9rem; }
+.recap-points li {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  font-size: 1rem;
+  background: var(--parchment);
+  border-radius: 6px;
+  padding: 1.1rem 1.3rem;
+  border-left: 3px solid transparent;
+  transition: border-color 0.35s ease, transform 0.35s ease;
+  cursor: none;
+}
+.recap-points li:hover { border-left-color: var(--amber); }
+.recap-points .mark {
+  color: var(--amber);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  min-width: 1.8rem;
+}
 
-  .btn-secondary:hover {
-    border-color: var(--moss);
-    transform: translateY(-2px);
-  }
+/* ── QUOTE ───────────────────────────────────── */
+.quote-block {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem 5rem;
+  text-align: center;
+}
+.quote-block blockquote {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(1.25rem, 3.2vw, 1.7rem);
+  font-weight: 500;
+  color: var(--forest-deep);
+  line-height: 1.42;
+  margin-bottom: 1.5rem;
+}
+.quote-block cite {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  font-style: normal;
+  display: block;
+}
 
-  .scroll-hint {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--moss);
-    z-index: 1;
-    animation: bob 2.2s ease-in-out infinite;
-  }
+/* ── PRICING ─────────────────────────────────── */
+.pricing-section {
+  position: relative;
+  background: var(--forest-deep);
+  color: var(--cream);
+  padding: 7rem 1.5rem 6rem;
+  overflow: hidden;
+}
+#pricing-canvas {
+  position: absolute;
+  top: 0; right: -5%;
+  width: 58%; height: 100%;
+  z-index: 0;
+  opacity: 0.45;
+  pointer-events: none;
+}
+.pricing-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+.pricing-inner .eyebrow { color: var(--moss); margin-bottom: 1rem; }
+.pricing-inner h2 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 700;
+  margin-bottom: 1.4rem;
+  max-width: 540px;
+  overflow: hidden;
+}
+.pricing-inner h2 .line-inner { display: block; }
+.pricing-inner > p.pricing-intro {
+  font-size: 1.05rem;
+  opacity: 0.82;
+  max-width: 520px;
+  margin-bottom: 3.2rem;
+}
+.pricing-cards {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.price-card {
+  background: rgba(246,242,233,0.05);
+  border: 1px solid rgba(246,242,233,0.11);
+  border-radius: 10px;
+  padding: 1.8rem 1.5rem;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.25s ease, background 0.25s ease;
+  cursor: none;
+  will-change: transform, opacity;
+}
+.price-card:hover {
+  border-color: var(--amber);
+  background: rgba(246,242,233,0.08);
+}
+.price-card .tag {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.67rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--moss);
+  margin-bottom: 0.8rem;
+  display: block;
+}
+.price-card h3 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.65rem;
+  color: var(--cream);
+}
+.price-card .amount {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+.price-card .amount span {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--moss);
+}
+.price-card p.desc { font-size: 0.9rem; opacity: 0.72; line-height: 1.55; }
+.pricing-note {
+  margin-top: 2.8rem;
+  font-size: 0.88rem;
+  opacity: 0.55;
+  max-width: 500px;
+}
 
-  @keyframes bob {
-    0%, 100% { transform: translate(-50%, 0); opacity: 0.6; }
-    50% { transform: translate(-50%, 8px); opacity: 1; }
-  }
+/* ── CTA ─────────────────────────────────────── */
+.cta {
+  position: relative;
+  background: var(--forest-deep);
+  color: var(--cream);
+  text-align: center;
+  padding: 8rem 1.5rem 6rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(246,242,233,0.07);
+}
+#cta-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  opacity: 0.5;
+}
+.cta-inner { position: relative; z-index: 1; }
+.cta h2 {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  font-weight: 700;
+  margin-bottom: 1.3rem;
+  line-height: 1.08;
+  overflow: hidden;
+}
+.cta h2 .line-inner { display: block; }
+.cta p { max-width: 420px; margin: 0 auto 2.8rem; opacity: 0.82; font-size: 1.05rem; }
 
-  /* INTRO */
-  .intro {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 5rem 1.5rem 1rem;
-    font-size: 1.18rem;
-  }
+/* ── FOOTER ──────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.82rem;
+  background: var(--cream);
+  border-top: 1px solid rgba(31,58,46,0.1);
+}
+footer .author { font-weight: 700; font-size: 1rem; color: var(--forest-deep); margin-bottom: 0.3rem; }
+footer p { opacity: 0.55; margin-bottom: 0.2rem; }
+footer .author { opacity: 1; }
 
-  .intro p { margin-bottom: 1.25rem; }
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 500px) {
+  body { cursor: auto; }
+  #cur, #cur-ring { display: none; }
+  .hero-inner, .intro, .divider, .recap-strip, .quote-block, .pricing-inner, .cta-inner { padding-left: 1.2rem; padding-right: 1.2rem; }
+  #pricing-canvas { display: none; }
+}
 
-  /* SECTION GENERIC */
-  .section {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 3rem 1.5rem;
-    border-top: 1px solid rgba(31,58,46,0.12);
-  }
-
-  .section .eyebrow { color: var(--forest-mid); margin-bottom: 0.85rem; }
-
-  .section h2 {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: var(--forest-deep);
-    margin-bottom: 1rem;
-  }
-
-  .section p { margin-bottom: 1rem; font-size: 1.05rem; }
-
-  /* RECAP STRIP */
-  .recap-strip {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0 1.5rem 3rem;
-  }
-
-  .recap-points {
-    list-style: none;
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .recap-points li {
-    display: flex;
-    gap: 0.9rem;
-    align-items: flex-start;
-    font-size: 1rem;
-    background: var(--parchment);
-    border-radius: 6px;
-    padding: 1rem 1.1rem;
-  }
-
-  .recap-points .mark {
-    color: var(--amber);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  /* PRICING SECTION */
-  .pricing-section {
-    position: relative;
-    background: var(--forest-deep);
-    color: var(--cream);
-    padding: 5rem 1.5rem;
-    overflow: hidden;
-  }
-
-  #pricing-canvas {
-    position: absolute;
-    top: 0; right: -10%;
-    width: 60%; height: 100%;
-    z-index: 0;
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .pricing-inner {
-    max-width: 680px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  .pricing-inner .eyebrow { color: var(--moss); margin-bottom: 1rem; }
-
-  .pricing-inner h2 {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 2.1rem;
-    font-weight: 700;
-    margin-bottom: 1.25rem;
-    max-width: 480px;
-  }
-
-  .pricing-inner > p {
-    font-size: 1.1rem;
-    opacity: 0.88;
-    max-width: 520px;
-    margin-bottom: 2.5rem;
-  }
-
-  .pricing-cards {
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-
-  .price-card {
-    background: rgba(246,242,233,0.06);
-    border: 1px solid rgba(246,242,233,0.14);
-    border-radius: 8px;
-    padding: 1.75rem 1.5rem;
-    backdrop-filter: blur(2px);
-    transition: border-color 0.2s ease, transform 0.2s ease;
-  }
-
-  .price-card:hover {
-    border-color: var(--amber);
-    transform: translateY(-4px);
-  }
-
-  .price-card .tag {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--moss);
-    margin-bottom: 0.75rem;
-  }
-
-  .price-card h3 {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: var(--cream);
-  }
-
-  .price-card .amount {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--amber);
-    margin-bottom: 0.4rem;
-  }
-
-  .price-card .amount span {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--moss);
-  }
-
-  .price-card p.desc {
-    font-size: 0.95rem;
-    opacity: 0.8;
-    margin-bottom: 0;
-  }
-
-  .pricing-note {
-    margin-top: 2.5rem;
-    font-size: 0.92rem;
-    opacity: 0.65;
-    max-width: 520px;
-  }
-
-  /* QUOTE */
-  .quote-block {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 3.5rem 1.5rem;
-    border-top: 1px solid rgba(31,58,46,0.12);
-    text-align: center;
-  }
-
-  .quote-block blockquote {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: var(--forest-deep);
-    line-height: 1.4;
-    margin-bottom: 1rem;
-  }
-
-  .quote-block cite {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    opacity: 0.6;
-    font-style: normal;
-  }
-
-  /* CTA / FOOTER */
-  .cta {
-    position: relative;
-    background: var(--forest-deep);
-    color: var(--cream);
-    text-align: center;
-    padding: 5rem 1.5rem 4rem;
-    overflow: hidden;
-  }
-
-  #cta-canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-    opacity: 0.6;
-  }
-
-  .cta-inner { position: relative; z-index: 1; }
-
-  .cta h2 {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 1.9rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-
-  .cta p { max-width: 480px; margin: 0 auto 2rem; opacity: 0.85; }
-
-  footer {
-    text-align: center;
-    padding: 2.5rem 1.5rem;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    font-size: 0.85rem;
-    color: var(--forest-mid);
-    opacity: 0.7;
-    background: var(--cream);
-  }
-
-  footer .author {
-    font-weight: 700;
-    color: var(--forest-deep);
-    opacity: 1;
-    margin-bottom: 0.2rem;
-  }
-
-  @media (max-width: 480px) {
-    .hero-inner { padding: 0 1.25rem; }
-    .section, .intro, .quote-block, .recap-strip, .pricing-inner { padding-left: 1.25rem; padding-right: 1.25rem; }
-    #pricing-canvas { display: none; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    canvas { display: none; }
-    .scroll-hint { animation: none; }
-  }
+@media (prefers-reduced-motion: reduce) {
+  canvas { display: none !important; }
+  .grain, .marquee-track, .scroll-hint { animation: none !important; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  #loader { display: none !important; }
+}
 </style>
 </head>
 <body>
 
-<!-- HERO -->
-<section class="hero">
+<!-- ── LOADER ─────────────────────────────────── -->
+<div id="loader">
+  <div class="loader-pct" id="loader-pct">0</div>
+  <div class="loader-label">Loading</div>
+  <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-fill"></div></div>
+</div>
+
+<!-- ── GRAIN ──────────────────────────────────── -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ── PROGRESS BAR ───────────────────────────── -->
+<div id="progress-bar"></div>
+
+<!-- ── CURSOR ─────────────────────────────────── -->
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ════════════════════════════════════════════ -->
+<section class="hero" id="hero">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-inner">
-    <p class="eyebrow">AI &amp; Communications · Live Workshop</p>
-    <h1>Stop scrolling.<br>Start <span class="accent">building</span> your AI assistant.</h1>
-    <p class="sub">A hands-on day in the forest with Claude AI, tailored to your actual work. Build something real, walk away using it the same week.</p>
-    <div class="hero-cta">
-      <a href="#pricing" class="btn-primary">See workshop options</a>
-      <a href="#recap" class="btn-secondary">What happened last time</a>
+    <p class="eyebrow" id="hero-eyebrow">AI &amp; Communications · Live Workshop</p>
+    <h1 id="hero-h1">Stop scrolling.<br>Start <span class="accent">building</span><br>your AI assistant.</h1>
+    <p class="sub" id="hero-sub">A hands-on day in the forest with Claude AI, tailored to your actual work. Build something real, walk away using it the same week.</p>
+    <div class="hero-cta" id="hero-cta">
+      <a href="#pricing" class="btn-primary magnetic"><span class="btn-inner">See workshop options</span></a>
+      <a href="#recap" class="btn-secondary magnetic"><span class="btn-inner">What happened last time</span></a>
     </div>
   </div>
   <p class="scroll-hint">Scroll ↓</p>
 </section>
 
-<div class="intro" id="recap">
-  <p>In June 2026, I ran a pilot: a small group, a day at Brackenhurst in Tigoni, and one goal, leave with an AI assistant that actually runs part of your week. No theory-only slides, no "AI 101." Everyone built something real and tested it before lunch.</p>
-  <p>It was free, because I wanted to get the format right before charging for it. It worked. Here's what came out of it, and what the next cohorts look like.</p>
+<!-- ── MARQUEE 1 ────────────────────────────── -->
+<div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Build Your AI Assistant</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">June 2026</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Brackenhurst, Tigoni</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Hands-On Workshop</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Claude AI</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Build Your AI Assistant</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">June 2026</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Brackenhurst, Tigoni</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Hands-On Workshop</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Claude AI</span><span class="marquee-item marquee-dot">·</span>
+  </div>
 </div>
 
+<!-- ════════════════════════════════════════════ -->
+<!-- INTRO                                       -->
+<!-- ════════════════════════════════════════════ -->
+<div class="intro" id="recap">
+  <p class="fade-up">In June 2026, I ran a pilot: a small group, a day at Brackenhurst in Tigoni, and one goal — leave with an AI assistant that actually runs part of your week. No theory-only slides, no "AI 101." Everyone built something real and tested it before lunch.</p>
+  <p class="fade-up">It was free, because I wanted to get the format right before charging for it. It worked. Here's what came out of it, and what the next cohorts look like.</p>
+</div>
+
+<!-- ── MARQUEE 2 (light, reverse) ───────────── -->
+<div class="marquee-strip light reverse slow" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Automate</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Connect</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Ship</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Think</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Build</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Create</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Automate</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Connect</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Ship</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Think</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Build</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Create</span><span class="marquee-item marquee-dot">·</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- RECAP STRIP                                 -->
+<!-- ════════════════════════════════════════════ -->
 <div class="recap-strip">
   <ul class="recap-points">
-    <li><span class="mark">01</span><span>Start with one workflow, not ten. The biggest wins came from picking a single recurring task and automating that completely.</span></li>
-    <li><span class="mark">02</span><span>Give the assistant context, not just instructions. The setups that stuck were the ones built around how people actually think and work.</span></li>
-    <li><span class="mark">03</span><span>Confirm before anything irreversible. Every good build had a human checkpoint before sending, publishing, or deleting.</span></li>
-    <li><span class="mark">04</span><span>Connection still beats configuration. The best builds were the ones people could explain in plain language, and that's what kept them using it after.</span></li>
+    <li class="recap-item"><span class="mark">01</span><span>Start with one workflow, not ten. The biggest wins came from picking a single recurring task and automating that completely.</span></li>
+    <li class="recap-item"><span class="mark">02</span><span>Give the assistant context, not just instructions. The setups that stuck were the ones built around how people actually think and work.</span></li>
+    <li class="recap-item"><span class="mark">03</span><span>Confirm before anything irreversible. Every good build had a human checkpoint before sending, publishing, or deleting.</span></li>
+    <li class="recap-item"><span class="mark">04</span><span>Connection still beats configuration. The best builds were the ones people could explain in plain language, and that's what kept them using it after.</span></li>
   </ul>
 </div>
 
-<div class="quote-block">
-  <blockquote>"A perfect deck means nothing if the room isn't with you. The same is true for a perfect workflow. If it doesn't fit how you actually think, you won't use it."</blockquote>
-  <cite>Ian Githu, opening remarks, June 2026</cite>
+<!-- ── DIVIDER ───────────────────────────────── -->
+<div class="divider"><div class="divider-line" id="div1"></div></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- QUOTE                                       -->
+<!-- ════════════════════════════════════════════ -->
+<div class="quote-block" id="quote-block">
+  <blockquote id="quote-text">"A perfect deck means nothing if the room isn't with you. The same is true for a perfect workflow. If it doesn't fit how you actually think, you won't use it."</blockquote>
+  <cite id="quote-cite">Ian Githu — opening remarks, June 2026</cite>
 </div>
 
-<!-- PRICING -->
+<!-- ── MARQUEE 3 (fast) ──────────────────────── -->
+<div class="marquee-strip fast" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Small Groups</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Real Work</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">One Day</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">KES 150,000</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Next Cohort Opening Soon</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Small Groups</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Real Work</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">One Day</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">KES 150,000</span><span class="marquee-item marquee-dot">·</span>
+    <span class="marquee-item">Next Cohort Opening Soon</span><span class="marquee-item marquee-dot">·</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PRICING                                     -->
+<!-- ════════════════════════════════════════════ -->
 <section class="pricing-section" id="pricing">
   <canvas id="pricing-canvas"></canvas>
   <div class="pricing-inner">
-    <p class="eyebrow">Next Cohorts</p>
-    <h2>The pilot was free. The next ones are worth paying for.</h2>
-    <p>Same format that worked in June: small group, real work, one day, an assistant you actually use afterward. Choose the option that fits your team.</p>
-
+    <p class="eyebrow fade-up-el" id="pricing-eyebrow">Next Cohorts</p>
+    <h2 id="pricing-h2">
+      <span class="reveal-line-block"><span class="line-inner">The pilot was free.</span></span>
+      <span class="reveal-line-block"><span class="line-inner">The next ones are worth</span></span>
+      <span class="reveal-line-block"><span class="line-inner">paying for.</span></span>
+    </h2>
+    <p class="pricing-intro fade-up-el">Same format that worked in June: small group, real work, one day, an assistant you actually use afterward. Choose the option that fits your team.</p>
     <div class="pricing-cards">
-      <div class="price-card">
+      <div class="price-card pricing-card-el">
         <p class="tag">Individual Seat</p>
         <h3>Masterclass Day</h3>
-        <div class="amount">KES 150,000 <span>/ person</span></div>
+        <div class="amount counter-el" data-target="150000">KES 0 <span>/ person</span></div>
         <p class="desc">Full-day, hands-on. Build and configure your own AI assistant for your real work, with direct guidance throughout.</p>
       </div>
-      <div class="price-card">
+      <div class="price-card pricing-card-el">
         <p class="tag">Small Group</p>
         <h3>Team Cohort</h3>
-        <div class="amount">KES 150,000 <span>/ person</span></div>
+        <div class="amount counter-el" data-target="150000">KES 0 <span>/ person</span></div>
         <p class="desc">Bring your team. Same format, shared context, and a setup that fits how your team already works together.</p>
       </div>
-      <div class="price-card">
+      <div class="price-card pricing-card-el">
         <p class="tag">Custom</p>
         <h3>In-House Session</h3>
         <div class="amount">Let's talk</div>
         <p class="desc">On-site, tailored to your organisation's tools and workflows. Scoped after a short discovery call.</p>
       </div>
     </div>
-
-    <p class="pricing-note">Spaces are intentionally small to keep the hands-on quality of the pilot. Get in touch to check availability for the next date.</p>
+    <p class="pricing-note fade-up-el">Spaces are intentionally small to keep the hands-on quality of the pilot. Get in touch to check availability for the next date.</p>
   </div>
 </section>
 
-<!-- CTA -->
-<section class="cta">
+<!-- ════════════════════════════════════════════ -->
+<!-- CTA                                         -->
+<!-- ════════════════════════════════════════════ -->
+<section class="cta" id="cta-section">
   <canvas id="cta-canvas"></canvas>
   <div class="cta-inner">
-    <h2>Ready to build yours?</h2>
-    <p>Reach out and I'll walk you through the format, dates, and what to bring. Spaces fill quickly, small groups are the whole point.</p>
-    <a href="https://www.linkedin.com/in/iangithu" class="btn-primary">Get in touch</a>
+    <h2 id="cta-h2">
+      <span class="reveal-line-block"><span class="line-inner">Ready to</span></span>
+      <span class="reveal-line-block"><span class="line-inner">build yours?</span></span>
+    </h2>
+    <p class="fade-up-el" id="cta-sub">Reach out and I'll walk you through the format, dates, and what to bring. Spaces fill quickly, small groups are the whole point.</p>
+    <a href="https://www.linkedin.com/in/iangithu" class="btn-primary magnetic fade-up-el" id="cta-btn">
+      <span class="btn-inner">Get in touch</span>
+    </a>
   </div>
 </section>
 
-<footer>
+<!-- ════════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ════════════════════════════════════════════ -->
+<footer id="site-footer" class="fade-up-el">
   <p class="author">Ian Githu</p>
   <p>Speaker &amp; Communications Professional · el-speak.com</p>
-  <p style="margin-top:0.5rem;">June 2026</p>
+  <p style="margin-top:0.4rem; font-size:0.78rem;">June 2026</p>
 </footer>
 
 <script>
-  // Respect reduced motion preference
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ══════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════ */
 
-  if (!reduceMotion && window.THREE) {
+/* Split element's text content into per-character spans while
+   preserving <br> and child <span> elements (like .accent).       */
+function splitChars(el) {
+  const nodes = Array.from(el.childNodes);
+  el.innerHTML = '';
+  const chars = [];
 
-    // ---------- HERO: floating particle canopy ----------
-    (function heroScene() {
-      const canvas = document.getElementById('hero-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.z = 18;
+  function wrapChar(char, container) {
+    const w = document.createElement('span');
+    w.className = 'reveal-line';
+    const i = document.createElement('span');
+    i.className = 'char';
+    i.textContent = char === ' ' ? ' ' : char;
+    w.appendChild(i);
+    container.appendChild(w);
+    chars.push(i);
+  }
 
-      function resize() {
-        const w = canvas.clientWidth || window.innerWidth;
-        const h = canvas.clientHeight || window.innerHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      resize();
-
-      // Particle field: soft amber/moss points drifting like light through canopy
-      const count = 220;
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const forest = new THREE.Color(0x7A9E7E);
-      const amber = new THREE.Color(0xD98E3F);
-
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 40;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 24;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
-
-        const c = Math.random() > 0.82 ? amber : forest;
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-      }
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const mat = new THREE.PointsMaterial({
-        size: 0.22,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.85,
-        depthWrite: false
+  nodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      [...node.textContent].forEach(c => {
+        if (c === ' ' || c === ' ') {
+          const sp = document.createElement('span');
+          sp.style.display = 'inline-block';
+          sp.style.width = '0.25em';
+          el.appendChild(sp);
+        } else {
+          wrapChar(c, el);
+        }
       });
-
-      const points = new THREE.Points(geo, mat);
-      scene.add(points);
-
-      // Low-poly icosahedron "node" cluster, slowly rotating
-      const icoGeo = new THREE.IcosahedronGeometry(4.5, 0);
-      const icoMat = new THREE.MeshBasicMaterial({
-        color: 0xD98E3F,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.35
+    } else if (node.nodeName === 'BR') {
+      el.appendChild(document.createElement('br'));
+    } else if (node.nodeName === 'SPAN') {
+      const clone = node.cloneNode(false); // keep class/style, not children
+      clone.innerHTML = '';
+      [...node.textContent].forEach(c => {
+        if (c === ' ') {
+          const sp = document.createElement('span');
+          sp.style.display = 'inline-block'; sp.style.width = '0.25em';
+          clone.appendChild(sp);
+        } else {
+          wrapChar(c, clone);
+        }
       });
-      const ico = new THREE.Mesh(icoGeo, icoMat);
-      ico.position.set(0, -1, -6);
-      scene.add(ico);
+      el.appendChild(clone);
+    }
+  });
 
-      const icoGeo2 = new THREE.IcosahedronGeometry(2.4, 1);
-      const icoMat2 = new THREE.MeshBasicMaterial({
-        color: 0x7A9E7E,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.45
-      });
-      const ico2 = new THREE.Mesh(icoGeo2, icoMat2);
-      ico2.position.set(6, 3, -4);
-      scene.add(ico2);
+  return chars;
+}
 
-      let frame = 0;
-      function animate() {
-        frame += 0.0035;
-        points.rotation.y = frame * 0.6;
-        points.rotation.x = Math.sin(frame * 0.4) * 0.05;
-        ico.rotation.y = frame * 1.2;
-        ico.rotation.x = frame * 0.8;
-        ico2.rotation.y = -frame * 1.5;
-        ico2.rotation.x = -frame * 0.9;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
+/* Split element text into per-word spans */
+function splitWords(el) {
+  const text = el.textContent;
+  el.textContent = '';
+  return text.split(' ').map((word, i, arr) => {
+    const w = document.createElement('span');
+    w.className = 'reveal-line';
+    w.style.marginRight = '0.28em';
+    const inner = document.createElement('span');
+    inner.className = 'word';
+    inner.textContent = word;
+    w.appendChild(inner);
+    el.appendChild(w);
+    return inner;
+  });
+}
+
+/* ══════════════════════════════════════════════
+   LOADER
+══════════════════════════════════════════════ */
+const loaderEl   = document.getElementById('loader');
+const loaderPct  = document.getElementById('loader-pct');
+const loaderFill = document.getElementById('loader-fill');
+let pct = 0;
+
+const ticker = setInterval(() => {
+  pct = Math.min(pct + Math.random() * 18 + 4, 92);
+  loaderPct.textContent  = Math.round(pct);
+  loaderFill.style.width = pct + '%';
+}, 100);
+
+window.addEventListener('load', () => {
+  clearInterval(ticker);
+  loaderPct.textContent  = 100;
+  loaderFill.style.width = '100%';
+  setTimeout(boot, 350);
+});
+
+/* ══════════════════════════════════════════════
+   BOOT — runs after loader completes
+══════════════════════════════════════════════ */
+function boot() {
+  /* Check for reduced-motion before doing anything */
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    loaderEl.style.display = 'none';
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── Lenis smooth scroll ─────────────────── */
+  let lenis;
+  if (typeof Lenis !== 'undefined') {
+    lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(t => lenis.raf(t * 1000));
+    gsap.ticker.lagSmoothing(0);
+
+    /* Progress bar */
+    lenis.on('scroll', ({ progress }) => {
+      document.getElementById('progress-bar').style.width = (progress * 100) + '%';
+    });
+  }
+
+  /* ── Hide loader ─────────────────────────── */
+  gsap.to(loaderEl, {
+    yPercent: -100,
+    duration: 1,
+    ease: 'power4.inOut',
+    onComplete: () => { loaderEl.style.display = 'none'; }
+  });
+
+  /* ── Custom cursor ───────────────────────── */
+  const cur     = document.getElementById('cur');
+  const curRing = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  let ringRAF;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    gsap.set(cur, { x: mx, y: my });
+    curRing.classList.add('visible');
+  });
+
+  (function ringLoop() {
+    rx += (mx - rx) * 0.1;
+    ry += (my - ry) * 0.1;
+    gsap.set(curRing, { x: rx, y: ry });
+    ringRAF = requestAnimationFrame(ringLoop);
+  })();
+
+  /* Cursor hover states */
+  document.querySelectorAll('a, button, .price-card, .recap-points li').forEach(el => {
+    el.addEventListener('mouseenter', () => cur.classList.add('big'));
+    el.addEventListener('mouseleave', () => cur.classList.remove('big'));
+  });
+
+  /* Cursor colour flip on dark sections */
+  const darkSecs = document.querySelectorAll('.hero, .pricing-section, .cta, .marquee-strip:not(.light)');
+  const darkObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        cur.classList.add('light');
+        curRing.classList.add('light');
+      } else {
+        const anyDark = [...darkSecs].some(s => {
+          const r = s.getBoundingClientRect();
+          return r.top < window.innerHeight * 0.5 && r.bottom > window.innerHeight * 0.5;
+        });
+        if (!anyDark) { cur.classList.remove('light'); curRing.classList.remove('light'); }
       }
-      animate();
-      window.addEventListener('resize', resize);
-    })();
+    });
+  }, { threshold: 0.3 });
+  darkSecs.forEach(s => darkObs.observe(s));
 
-    // ---------- PRICING: drifting node cluster ----------
-    (function pricingScene() {
-      const canvas = document.getElementById('pricing-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-      camera.position.z = 14;
+  /* ── Magnetic buttons ────────────────────── */
+  document.querySelectorAll('.magnetic').forEach(btn => {
+    const inner = btn.querySelector('.btn-inner');
+    btn.addEventListener('mousemove', e => {
+      const r = btn.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width * 0.5)) * 0.38;
+      const dy = (e.clientY - (r.top  + r.height * 0.5)) * 0.38;
+      gsap.to(btn,   { x: dx,        y: dy,        duration: 0.4, ease: 'power2.out' });
+      gsap.to(inner, { x: dx * 0.3,  y: dy * 0.3,  duration: 0.4, ease: 'power2.out' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn,   { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.55)' });
+      gsap.to(inner, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.55)' });
+    });
+  });
 
-      function resize() {
-        const w = canvas.clientWidth || canvas.parentElement.clientWidth;
-        const h = canvas.clientHeight || canvas.parentElement.clientHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      resize();
+  /* ══════════════════════════════════════════
+     HERO ENTRANCE  (sequenced timeline)
+  ══════════════════════════════════════════ */
+  const h1Chars   = splitChars(document.getElementById('hero-h1'));
+  const subWords  = splitWords(document.getElementById('hero-sub'));
 
-      const group = new THREE.Group();
-      scene.add(group);
+  const heroTL = gsap.timeline({ delay: 0.55 });
 
-      // Cluster of connected nodes (spheres + lines)
-      const nodeCount = 9;
-      const nodePositions = [];
-      const sphereGeo = new THREE.SphereGeometry(0.18, 12, 12);
-      const amberMat = new THREE.MeshBasicMaterial({ color: 0xD98E3F });
-      const mossMat = new THREE.MeshBasicMaterial({ color: 0x7A9E7E });
+  heroTL
+    .from('#hero-eyebrow', { opacity: 0, y: 14, duration: 0.7, ease: 'power3.out' })
+    .from(h1Chars, {
+      y: '105%', opacity: 0,
+      duration: 0.65,
+      stagger: 0.016,
+      ease: 'power4.out'
+    }, '-=0.4')
+    .from(subWords, {
+      y: '110%', opacity: 0,
+      duration: 0.55,
+      stagger: 0.035,
+      ease: 'power3.out'
+    }, '-=0.35')
+    .from('#hero-cta', { opacity: 0, y: 18, duration: 0.6, ease: 'power3.out' }, '-=0.2')
+    .from('.scroll-hint', { opacity: 0, duration: 0.6 }, '-=0.1');
 
-      for (let i = 0; i < nodeCount; i++) {
-        const pos = new THREE.Vector3(
-          (Math.random() - 0.5) * 8,
-          (Math.random() - 0.5) * 8,
-          (Math.random() - 0.5) * 4
-        );
-        nodePositions.push(pos);
-        const mat = Math.random() > 0.7 ? amberMat : mossMat;
-        const sphere = new THREE.Mesh(sphereGeo, mat);
-        sphere.position.copy(pos);
-        group.add(sphere);
-      }
+  /* ── Hero canvas scroll parallax ─────────── */
+  gsap.to('#hero-canvas', {
+    yPercent: 28,
+    ease: 'none',
+    scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+  });
 
-      // Connect nearby nodes with thin lines
-      const lineMat = new THREE.LineBasicMaterial({ color: 0x7A9E7E, transparent: true, opacity: 0.25 });
-      for (let i = 0; i < nodePositions.length; i++) {
-        for (let j = i + 1; j < nodePositions.length; j++) {
-          if (nodePositions[i].distanceTo(nodePositions[j]) < 4.5) {
-            const lineGeo = new THREE.BufferGeometry().setFromPoints([nodePositions[i], nodePositions[j]]);
-            group.add(new THREE.Line(lineGeo, lineMat));
+  /* ══════════════════════════════════════════
+     SCROLL ANIMATIONS
+  ══════════════════════════════════════════ */
+
+  /* Generic fade-up helper */
+  gsap.utils.toArray('.fade-up').forEach(el => {
+    gsap.from(el, {
+      opacity: 0, y: 40,
+      duration: 0.9,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 84%', toggleActions: 'play none none none' }
+    });
+  });
+
+  gsap.utils.toArray('.fade-up-el').forEach((el, i) => {
+    gsap.from(el, {
+      opacity: 0, y: 30,
+      duration: 0.85,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 86%', toggleActions: 'play none none none' }
+    });
+  });
+
+  /* Divider line draws across */
+  gsap.from('#div1', {
+    width: '0%',
+    duration: 1.4,
+    ease: 'power3.inOut',
+    scrollTrigger: { trigger: '#div1', start: 'top 82%' }
+  });
+
+  /* Recap items slide in from right, staggered */
+  gsap.from('.recap-item', {
+    opacity: 0, x: 60,
+    duration: 0.75,
+    stagger: 0.12,
+    ease: 'power4.out',
+    scrollTrigger: { trigger: '.recap-strip', start: 'top 80%', toggleActions: 'play none none none' }
+  });
+
+  /* Quote: word-by-word reveal */
+  const quoteWords = splitWords(document.getElementById('quote-text'));
+  gsap.from(quoteWords, {
+    opacity: 0, y: '110%',
+    duration: 0.5,
+    stagger: 0.035,
+    ease: 'power3.out',
+    scrollTrigger: { trigger: '#quote-block', start: 'top 72%' }
+  });
+  gsap.from('#quote-cite', {
+    opacity: 0, y: 10,
+    duration: 0.8,
+    ease: 'power2.out',
+    scrollTrigger: { trigger: '#quote-cite', start: 'top 88%' }
+  });
+
+  /* Pricing h2 line reveal */
+  gsap.from('#pricing-h2 .line-inner', {
+    y: '105%',
+    duration: 0.85,
+    stagger: 0.1,
+    ease: 'power4.out',
+    scrollTrigger: { trigger: '#pricing-h2', start: 'top 78%' }
+  });
+
+  /* Pricing cards stagger in with slight tilt */
+  gsap.from('.pricing-card-el', {
+    opacity: 0, y: 55, rotation: 2,
+    duration: 0.85,
+    stagger: 0.14,
+    ease: 'power4.out',
+    scrollTrigger: { trigger: '.pricing-cards', start: 'top 82%', toggleActions: 'play none none none' }
+  });
+
+  /* KES counter animation */
+  document.querySelectorAll('.counter-el').forEach(el => {
+    const target = parseInt(el.dataset.target, 10);
+    const suffix = el.querySelector('span') ? ' <span>' + el.querySelector('span').textContent + '</span>' : '';
+    const obj = { val: 0 };
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        gsap.to(obj, {
+          val: target,
+          duration: 1.6,
+          ease: 'power2.out',
+          onUpdate: () => {
+            el.innerHTML = 'KES ' + Math.round(obj.val).toLocaleString() + suffix;
           }
+        });
+      }
+    });
+  });
+
+  /* CTA h2 line reveal */
+  gsap.from('#cta-h2 .line-inner', {
+    y: '110%',
+    duration: 0.9,
+    stagger: 0.12,
+    ease: 'power4.out',
+    scrollTrigger: { trigger: '#cta-section', start: 'top 72%' }
+  });
+
+  /* Footer fade */
+  gsap.from('#site-footer', {
+    opacity: 0, y: 20,
+    duration: 0.9,
+    ease: 'power2.out',
+    scrollTrigger: { trigger: '#site-footer', start: 'top 92%' }
+  });
+
+  /* ══════════════════════════════════════════
+     THREE.JS SCENES
+  ══════════════════════════════════════════ */
+  if (!window.THREE) return;
+
+  /* ─ HERO: particle canopy + wireframe nodes ─ */
+  (function heroScene() {
+    const canvas   = document.getElementById('hero-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const scene    = new THREE.Scene();
+    const camera   = new THREE.PerspectiveCamera(58, 1, 0.1, 120);
+    camera.position.z = 20;
+
+    function resize() {
+      const w = canvas.clientWidth  || window.innerWidth;
+      const h = canvas.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    resize();
+    window.addEventListener('resize', resize);
+
+    /* ── Particles ── */
+    const N = 320;
+    const pos = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+    const vel = new Float32Array(N * 3); // per-particle drift velocity
+    const cForest = new THREE.Color(0x7A9E7E);
+    const cAmber  = new THREE.Color(0xD98E3F);
+    const cCream  = new THREE.Color(0xF6F2E9);
+
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   = (Math.random()-0.5)*50;
+      pos[i*3+1] = (Math.random()-0.5)*30;
+      pos[i*3+2] = (Math.random()-0.5)*38;
+      vel[i*3]   = (Math.random()-0.5)*0.004;
+      vel[i*3+1] = (Math.random()-0.5)*0.004;
+      vel[i*3+2] = 0;
+      const r = Math.random();
+      const c = r > 0.88 ? cAmber : r > 0.55 ? cForest : cCream;
+      col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    const posAttr = new THREE.BufferAttribute(pos, 3);
+    posAttr.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', posAttr);
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+    const ptMat = new THREE.PointsMaterial({
+      size: 0.19, vertexColors: true, transparent: true, opacity: 0.78, depthWrite: false
+    });
+    const points = new THREE.Points(geo, ptMat);
+    scene.add(points);
+
+    /* ── Wireframe polyhedra ── */
+    function makeWire(geo, color, opacity, pos, rot) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        color, wireframe: true, transparent: true, opacity
+      }));
+      m.position.set(...pos);
+      m.rotation.set(...rot);
+      scene.add(m);
+      return m;
+    }
+
+    const ico1 = makeWire(new THREE.IcosahedronGeometry(5.2, 0), 0xD98E3F, 0.22, [0, -1.5, -9], [0,0,0]);
+    const ico2 = makeWire(new THREE.IcosahedronGeometry(3.0, 1), 0x7A9E7E, 0.38, [7.5, 3.5, -5], [0,0,0]);
+    const oct1 = makeWire(new THREE.OctahedronGeometry(1.8, 0), 0xF6F2E9, 0.18, [-7, 2.5, -4], [0,0,0]);
+    const tet1 = makeWire(new THREE.TetrahedronGeometry(1.4, 0), 0xD98E3F, 0.28, [5, -4, -3], [0,0,0]);
+
+    /* ── Mouse parallax ── */
+    let tmx = 0, tmy = 0;
+    document.addEventListener('mousemove', e => {
+      tmx = (e.clientX / window.innerWidth  - 0.5) * 2;
+      tmy = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    let t = 0;
+    function animate() {
+      t += 0.0028;
+
+      /* Drift each particle individually */
+      for (let i = 0; i < N; i++) {
+        pos[i*3]   += vel[i*3];
+        pos[i*3+1] += vel[i*3+1];
+        /* wrap */
+        if (pos[i*3]   >  25) pos[i*3]   = -25;
+        if (pos[i*3]   < -25) pos[i*3]   =  25;
+        if (pos[i*3+1] >  15) pos[i*3+1] = -15;
+        if (pos[i*3+1] < -15) pos[i*3+1] =  15;
+      }
+      posAttr.needsUpdate = true;
+
+      /* Global rotation */
+      points.rotation.y = t * 0.45 + tmx * 0.06;
+      points.rotation.x = Math.sin(t * 0.3) * 0.04 + tmy * 0.04;
+
+      /* Polyhedra rotate */
+      ico1.rotation.y = t * 0.9;  ico1.rotation.x = t * 0.6;
+      ico2.rotation.y = -t * 1.2; ico2.rotation.x = -t * 0.75;
+      oct1.rotation.y = t * 1.4;  oct1.rotation.z = t * 0.5;
+      tet1.rotation.y = -t * 1.1; tet1.rotation.x = t * 0.9;
+
+      /* Camera drift with mouse */
+      camera.position.x += (tmx * 0.45 - camera.position.x) * 0.03;
+      camera.position.y += (-tmy * 0.35 - camera.position.y) * 0.03;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  /* ─ PRICING: connected node graph ─ */
+  (function pricingScene() {
+    const canvas   = document.getElementById('pricing-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const scene    = new THREE.Scene();
+    const camera   = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
+    camera.position.z = 15;
+
+    function resize() {
+      const w = canvas.clientWidth  || canvas.parentElement.clientWidth;
+      const h = canvas.clientHeight || canvas.parentElement.clientHeight || 600;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    resize();
+    window.addEventListener('resize', resize);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    const nodePositions = [];
+    const sGeo = new THREE.SphereGeometry(0.15, 10, 10);
+
+    for (let i = 0; i < 14; i++) {
+      const p = new THREE.Vector3(
+        (Math.random()-0.5)*11,
+        (Math.random()-0.5)*11,
+        (Math.random()-0.5)*5
+      );
+      nodePositions.push(p);
+      const r = Math.random();
+      const color = r > 0.72 ? 0xD98E3F : r > 0.42 ? 0x7A9E7E : 0xF6F2E9;
+      const opacity = color === 0xF6F2E9 ? 0.35 : 1;
+      const mesh = new THREE.Mesh(sGeo,
+        new THREE.MeshBasicMaterial({ color, transparent: true, opacity }));
+      mesh.position.copy(p);
+      group.add(mesh);
+    }
+
+    const lMat = new THREE.LineBasicMaterial({ color: 0x7A9E7E, transparent: true, opacity: 0.18 });
+    for (let i = 0; i < nodePositions.length; i++) {
+      for (let j = i+1; j < nodePositions.length; j++) {
+        if (nodePositions[i].distanceTo(nodePositions[j]) < 5.5) {
+          group.add(new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([nodePositions[i], nodePositions[j]]),
+            lMat
+          ));
         }
       }
+    }
 
-      let frame = 0;
-      function animate() {
-        frame += 0.003;
-        group.rotation.y = frame;
-        group.rotation.x = Math.sin(frame * 0.6) * 0.2;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }
-      animate();
-      window.addEventListener('resize', resize);
-    })();
+    let t = 0;
+    function animate() {
+      t += 0.002;
+      group.rotation.y = t;
+      group.rotation.x = Math.sin(t * 0.5) * 0.18;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
 
-    // ---------- CTA: gentle ambient particles ----------
-    (function ctaScene() {
-      const canvas = document.getElementById('cta-canvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
-      camera.position.z = 12;
+  /* ─ CTA: ambient particle cloud ─ */
+  (function ctaScene() {
+    const canvas   = document.getElementById('cta-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const scene    = new THREE.Scene();
+    const camera   = new THREE.PerspectiveCamera(52, 1, 0.1, 100);
+    camera.position.z = 13;
 
-      function resize() {
-        const w = canvas.clientWidth || canvas.parentElement.clientWidth;
-        const h = canvas.clientHeight || canvas.parentElement.clientHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      resize();
+    function resize() {
+      const w = canvas.clientWidth  || canvas.parentElement.clientWidth;
+      const h = canvas.clientHeight || canvas.parentElement.clientHeight || 500;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    resize();
+    window.addEventListener('resize', resize);
 
-      const count = 140;
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const amber = new THREE.Color(0xD98E3F);
-      const cream = new THREE.Color(0xF6F2E9);
+    const N   = 180;
+    const pos = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+    const cA  = new THREE.Color(0xD98E3F);
+    const cC  = new THREE.Color(0xF6F2E9);
 
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 30;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 18;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-        const c = Math.random() > 0.85 ? amber : cream;
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-      }
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   = (Math.random()-0.5)*34;
+      pos[i*3+1] = (Math.random()-0.5)*22;
+      pos[i*3+2] = (Math.random()-0.5)*24;
+      const c = Math.random() > 0.8 ? cA : cC;
+      col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+    }
 
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({
+      size: 0.14, vertexColors: true, transparent: true, opacity: 0.42, depthWrite: false
+    });
+    const pts = new THREE.Points(geo, mat);
+    scene.add(pts);
 
-      const mat = new THREE.PointsMaterial({
-        size: 0.16,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.5,
-        depthWrite: false
-      });
-
-      const points = new THREE.Points(geo, mat);
-      scene.add(points);
-
-      let frame = 0;
-      function animate() {
-        frame += 0.002;
-        points.rotation.y = frame * 0.4;
-        points.position.y = Math.sin(frame * 2) * 0.5;
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
-      }
-      animate();
-      window.addEventListener('resize', resize);
-    })();
-  }
+    let t = 0;
+    function animate() {
+      t += 0.0018;
+      pts.rotation.y  = t * 0.38;
+      pts.position.y  = Math.sin(t * 1.6) * 0.45;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+}
 </script>
-
 </body>
 </html>
